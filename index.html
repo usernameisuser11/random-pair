@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>랜덤 짝 매칭</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: #222; font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+    main { max-width: 680px; margin: 65px auto 90px; padding: 0 22px; }
+    h1 { margin: 0 0 5px; font-size: 27px; font-weight: 700; letter-spacing: -.7px; }
+    .description { color: #666; margin: 0 0 28px; }
+    textarea { display: block; width: 100%; min-height: 210px; resize: vertical; border: 1px solid #d3d3d3; border-radius: 5px; padding: 14px; background: white; color: #222; font: inherit; line-height: 1.8; }
+    textarea:focus, select:focus, button:focus-visible, input:focus-visible { outline: 2px solid #555; outline-offset: 2px; }
+    .below { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 9px 0 21px; font-size: 13px; color: #777; }
+    .file-button { cursor: pointer; color: #444; text-decoration: underline; text-underline-offset: 3px; }
+    .file-button input { position:absolute; width:1px; height:1px; opacity:0; }
+    .options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-bottom: 20px; font-size: 13px; color: #444; }
+    .options label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+    input[type=checkbox] { accent-color: #222; margin:0; }
+    select { border: 1px solid #d3d3d3; background:white; color:#333; border-radius:4px; padding: 7px 9px; font:inherit; }
+    button { font: inherit; cursor: pointer; }
+    .primary { width: 100%; min-height: 46px; border: 1px solid #222; background: #222; color: white; border-radius: 5px; font-weight: 600; }
+    .primary:hover { background:#3a3a3a; }
+    .primary:disabled { opacity:.45; cursor:not-allowed; }
+    .status { min-height: 20px; margin-top: 9px; font-size: 13px; color: #666; }
+    .results { margin-top: 35px; border-top: 1px solid #e5e5e5; padding-top: 22px; }
+    .results[hidden] { display: none; }
+    .results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    h2 { margin: 0; font-size: 18px; font-weight: 700; }
+    .small-actions { display: flex; gap: 12px; }
+    .small-actions button { border:0; padding: 4px 0; background:none; color:#555; font-size:13px; text-decoration: underline; text-underline-offset:3px; }
+    .summary { color:#666; font-size:13px; margin: 0 0 12px; }
+    .pair-list { list-style:none; padding:0; margin:0; }
+    .pair-list li { display:grid; grid-template-columns: 52px 1fr; gap: 10px; border-bottom: 1px solid #eee; padding: 11px 0; }
+    .number { color:#888; font-size:13px; }
+    .people { font-weight: 500; overflow-wrap:anywhere; }
+    .note { color:#888; font-size:12px; margin-top:22px; }
+    @media(max-width:550px) {
+      main { margin: 32px auto 60px; padding: 0 17px; }
+      h1 { font-size:24px; }
+      .description { margin-bottom:20px; }
+      .results-head { align-items:flex-start; }
+      .options { gap:12px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>랜덤 짝 매칭</h1>
+  <p class="description">지난번 105명 명단을 넣어뒀어. 버튼을 누르면 바로 추첨돼.</p>
+
+  <textarea id="names" aria-label="참가자 명단" spellcheck="false">김대원
+김도경
+지아
+유선하
+김도연
+송예슬
+이태용
+백종욱
+문희찬
+이윤슬
+유채린
+이재영
+김민재
+김기현
+박세찬
+박은영
+장승원
+김주원
+서지민
+태규
+현지민
+서수빈
+고동연
+박진우
+김현민
+김지윤
+서일영
+전대환
+이민혁
+서예원
+엄태윤
+이민아
+박지연
+김예진
+유진
+정연우
+임효은
+전서연
+김유정
+채은
+김영민
+동석
+승주
+김민우
+장석주
+송준호
+원희재
+유금
+김동환
+정예린
+안소영
+오은새
+승유
+이계인
+유경
+정현진
+서정우
+김태규
+사재훈
+조민서
+최예린
+박동주
+정현우
+김예빈
+최모연
+안예은
+고정민
+화영
+임지섭
+고태영
+장동현
+김현서
+윤지민
+윤민재
+정수환
+강민경
+신지수
+김정목
+호준
+김혜진
+이상현
+김은율
+상혁
+김주영
+박준영
+조승빈
+송지예
+주연
+최아인
+권예림
+진상우
+이서영
+권혜림
+정윤서
+김태우
+김호근
+박채은
+임현영
+종현
+김유나
+건
+안승원
+선욱
+정성진
+이유진</textarea>
+  <div class="below">
+    <label class="file-button">명단 파일 불러오기
+      <input id="file" type="file" accept=".txt,.csv,text/plain,text/csv">
+    </label>
+    <span id="count">0명</span>
+  </div>
+
+  <div class="options">
+    <label><input id="gender" type="checkbox"> 남녀 우선 매칭</label>
+    <label>홀수 인원
+      <select id="odd">
+        <option value="single">1명 남기기</option>
+        <option value="trio">3인조 만들기</option>
+      </select>
+    </label>
+  </div>
+  <button class="primary" id="match" type="button" disabled>짝 만들기</button>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <section class="results" id="results" hidden>
+    <div class="results-head">
+      <h2>매칭 결과</h2>
+      <div class="small-actions">
+        <button type="button" id="copy">복사</button>
+        <button type="button" id="csv">CSV 저장</button>
+      </div>
+    </div>
+    <p class="summary" id="summary"></p>
+    <ol class="pair-list" id="list"></ol>
+  </section>
+
+  <p class="note">남녀 우선 매칭을 쓰려면 이름 뒤에 <b>, 남</b> 또는 <b>, 여</b>를 붙여줘.<br>명단은 외부로 전송되지 않고 브라우저에서만 처리돼.</p>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const input = $('names'), file = $('file'), matchButton = $('match');
+  let lastRoster = '', usedPairs = new Set(), groups = [];
+
+  function genderOf(value) {
+    const s = (value || '').trim().toLowerCase();
+    if (['남','남자','남성','m','male'].includes(s)) return 'm';
+    if (['여','여자','여성','f','female'].includes(s)) return 'f';
+    return '';
+  }
+
+  function getRoster() {
+    const people = [];
+    for (let line of input.value.replace(/\r/g, '').split('\n')) {
+      line = line.trim();
+      if (!line) continue;
+      const parts = line.split(/[,\t，]/).map(v => v.trim()).filter(Boolean);
+      if (!parts.length) continue;
+      if (parts[0] === '이름' && genderOf(parts[1]) === '' && /^(성별|gender)$/i.test(parts[1] || '')) continue;
+      // "이름, 남" 형식이면 성별을 읽고 그 외에는 이름 여러 개로 처리
+      if (parts.length >= 2 && genderOf(parts[1])) {
+        people.push({ id: people.length, name: parts[0], gender: genderOf(parts[1]) });
+      } else {
+        parts.forEach(name => people.push({ id: people.length, name, gender: '' }));
+      }
+    }
+    return people;
+  }
+
+  function refresh() {
+    const roster = getRoster();
+    $('count').textContent = `${roster.length}명`;
+    matchButton.disabled = roster.length < 2;
+    if (input.value !== lastRoster) {
+      usedPairs.clear();
+      groups = [];
+      $('results').hidden = true;
+      matchButton.textContent = '짝 만들기';
+      $('status').textContent = '';
+    }
+  }
+
+  function shuffle(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function build(people, genderPriority, oddMode) {
+    let pairs = [], rest = [];
+    if (genderPriority) {
+      const men = shuffle(people.filter(p => p.gender === 'm'));
+      const women = shuffle(people.filter(p => p.gender === 'f'));
+      while (men.length && women.length) pairs.push([men.pop(), women.pop()]);
+      rest = shuffle([...men, ...women, ...people.filter(p => !p.gender)]);
+    } else {
+      rest = shuffle(people);
+    }
+    while (rest.length >= 2) pairs.push([rest.pop(), rest.pop()]);
+    if (rest.length) {
+      if (oddMode === 'trio' && pairs.length) {
+        pairs[pairs.length - 1].push(rest.pop());
+      } else {
+        pairs.push([rest.pop()]);
+      }
+    }
+    return shuffle(pairs);
+  }
+
+  function pairKey(a, b) {
+    return [a.id, b.id].sort((x,y) => x-y).join(':');
+  }
+  function keysFor(gs) {
+    const result = [];
+    for (const group of gs)
+      for (let i = 0; i < group.length; i++)
+        for (let j = i + 1; j < group.length; j++)
+          result.push(pairKey(group[i], group[j]));
+    return result;
+  }
+
+  function makePairs() {
+    const people = getRoster();
+    if (people.length < 2) return;
+    if (input.value !== lastRoster) {
+      usedPairs.clear();
+      lastRoster = input.value;
+    }
+
+    let best = null, lowest = Infinity;
+    // 예전 짝이 가능한 한 다시 만나지 않도록 후보를 여러 번 섞어 확인
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const candidate = build(people, $('gender').checked, $('odd').value);
+      const score = keysFor(candidate).filter(k => usedPairs.has(k)).length;
+      if (score < lowest) { best = candidate; lowest = score; }
+      if (score === 0) break;
+    }
+    groups = best;
+    keysFor(best).forEach(key => usedPairs.add(key));
+    showResults();
+  }
+
+  function showResults() {
+    const ol = $('list');
+    ol.replaceChildren();
+    groups.forEach((group, i) => {
+      const li = document.createElement('li');
+      const num = document.createElement('span');
+      const people = document.createElement('span');
+      num.className = 'number'; people.className = 'people';
+      num.textContent = group.length === 1 ? '미배정' : `${i + 1}조`;
+      people.textContent = group.map(p => p.name).join(' · ');
+      li.append(num, people);
+      ol.appendChild(li);
+    });
+    const pairs = groups.filter(g => g.length === 2).length;
+    const trios = groups.filter(g => g.length === 3).length;
+    const singles = groups.filter(g => g.length === 1).length;
+    $('summary').textContent = `${groups.reduce((n,g) => n+g.length, 0)}명 · ${pairs}개 2인조${trios ? ` · ${trios}개 3인조` : ''}${singles ? ` · ${singles}명 미배정` : ''}`;
+    $('results').hidden = false;
+    matchButton.textContent = '다시 섞기';
+    $('status').textContent = '';
+  }
+
+  function textResults() {
+    return groups.map((g,i) => `${g.length === 1 ? '미배정' : `${i+1}조`}: ${g.map(p=>p.name).join(', ')}`).join('\n');
+  }
+  $('copy').addEventListener('click', async () => {
+    const value = textResults();
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (_) {
+      const temp = document.createElement('textarea');
+      temp.value = value; document.body.appendChild(temp); temp.select();
+      const success = document.execCommand('copy');
+      temp.remove();
+      if (!success) { $('status').textContent = '복사할 수 없어. 브라우저에서 다시 시도해줘.'; return; }
+    }
+    $('status').textContent = '결과를 복사했어.';
+  });
+  $('csv').addEventListener('click', () => {
+    const quote = s => '"' + String(s).replaceAll('"', '""') + '"';
+    const rows = [['조','참가자1','참가자2','참가자3'], ...groups.map((g,i) => [g.length === 1 ? '미배정' : `${i+1}조`, ...g.map(p=>p.name)])];
+    const csv = '\ufeff' + rows.map(row => row.map(quote).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    const a = document.createElement('a');
+    a.href=url; a.download='매칭결과.csv'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  file.addEventListener('change', async () => {
+    const selected = file.files?.[0];
+    if (!selected) return;
+    const data = await selected.arrayBuffer();
+    let content = new TextDecoder('utf-8').decode(data);
+    if (content.includes('\ufffd')) {
+      try { content = new TextDecoder('euc-kr').decode(data); } catch (_) { /* UTF-8 유지 */ }
+    }
+    input.value = content.replace(/^\ufeff/, '');
+    file.value = '';
+    refresh();
+  });
+  input.addEventListener('input', refresh);
+  $('gender').addEventListener('change', () => { $('status').textContent = ''; });
+  $('odd').addEventListener('change', () => { $('status').textContent = ''; });
+  matchButton.addEventListener('click', makePairs);
+  refresh();
+})();
+</script>
+</body>
+</html>
